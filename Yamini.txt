@@ -1,0 +1,107 @@
+CREATE TABLE Modified_Student SELECT * FROM Student;
+------------------------------------------------------------------
+
+CREATE TABLE New_Student LIKE Student;
+------------------------------------------------------------------
+
+SELECT * FROM Student WHERE ID > (SELECT COUNT(*) FROM Student) - 10;
+
+select MAX(Salary) AS Maximum Salary ,MIN(salary) AS Minimum salary from Employee;
+
+------------------------------------------------------------------
+
+from jinjasql import JinjaSql
+from six import string_types
+from copy import deepcopy
+user_transaction_template = '''
+select 
+    user_id
+    , count(*) as num_transactions
+    , sum(amount) as total_amount
+from 
+    transactions
+where
+    user_id = 1234
+    and transaction_date = '2022-03-02'
+group by
+    user_id
+'''
+params= {
+    'user_id': 1234,
+    'transaction_date': '2022-03-02'
+}
+j = JinjaSql(param_style='pyformat')
+query,bind_params = j.prepare_query(user_transaction_template,params)
+print(query);
+
+-----------------------------------------------------------------
+
+select * from Student WHERE name LIKE 'P%' AND surname LIKE 'S%';
+
+-----------------------------------------------------------------
+
+SELECT * FROM Student WHERE ID > (SELECT COUNT(*) FROM Student) - 1;
+-------------------------------------------------------------------
+
+WITH cteReports(FirstName, MiddleName, LastName, ID, description)
+AS
+(
+  SELECT FirstName, MiddleName, LastName,ID,'Good'
+  From Person
+  Where Emailpromotion=0
+  UNION ALL
+  SELECT FirstName, MiddleName, LastName,ID, 'Better'
+  From Person
+  Where Emailpromotion=1
+  UNION ALL
+  SELECT FirstName, MiddleName, LastName, BusinessEntityID,'Best'
+  From Person  
+)
+SELECT
+FirstName + ' ' +MiddleName +' '+ LastName AS FullName,description
+From cteReports;
+-------------------------------------------------------------------
+
+CREATE TRIGGER [dbo].[Customer_UPDATE]
+       ON [dbo].[Customers]
+AFTER UPDATE
+AS
+BEGIN
+       SET NOCOUNT ON;
+ 
+       DECLARE @CustomerId INT
+       DECLARE @Action VARCHAR(50)
+ 
+       SELECT @CustomerId = INSERTED.CustomerId       
+       FROM INSERTED
+ 
+       IF UPDATE(Name)
+       BEGIN
+              SET @Action = 'Updated Name'
+       END
+ 
+       IF UPDATE(Country)
+       BEGIN
+              SET @Action = 'Updated Country'
+       END
+ 
+       INSERT INTO CustomerLogs
+       VALUES(@CustomerId, @Action)
+END
+
+Delete:
+CREATE TRIGGER [dbo].[Customer_DELETE]
+       ON [dbo].[Customers]
+AFTER DELETE
+AS
+BEGIN
+       SET NOCOUNT ON;
+ 
+       DECLARE @CustomerId INT
+ 
+       SELECT @CustomerId = DELETED.CustomerId       
+       FROM DELETED
+ 
+       INSERT INTO CustomerLogs
+       VALUES(@CustomerId, 'Deleted')
+END
